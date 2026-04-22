@@ -1,0 +1,28 @@
+USE Session2;
+
+CREATE TABLE BOOK (
+    MaSach CHAR(5) PRIMARY KEY,
+
+    TenSach VARCHAR(200) NOT NULL,
+
+    SoLuong INT NOT NULL,
+
+    GiaThue DECIMAL(10,2) DEFAULT 5000,
+
+    CONSTRAINT chk_book_soluong CHECK (SoLuong >= 0)
+);
+
+ALTER TABLE BOOK
+ADD NgayNhap DATE;
+
+CREATE TABLE BORROW_BOOKS (
+    MaMuon INT AUTO_INCREMENT PRIMARY KEY,
+
+    MaSach CHAR(5) NOT NULL,
+
+    NgayMuon DATE DEFAULT (CURRENT_DATE),
+
+    CONSTRAINT fk_borrow_book
+        FOREIGN KEY (MaSach)
+        REFERENCES BOOK(MaSach)
+);
