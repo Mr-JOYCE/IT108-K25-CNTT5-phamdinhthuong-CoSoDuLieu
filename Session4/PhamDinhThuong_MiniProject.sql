@@ -35,9 +35,19 @@ set stock = stock + 10;
 delete from Products 
 where product_id = 4;
 
+delete from Products
+where price < 1000000;
+
 select * from Product;
 
 select product_name from Products
 where stock > 15;
 
-		
+select product_name from Products
+where price > 1000000 and price < 2000000;
+
+select * from Products
+where (product_name != 'iPhone 15' and stock >0);
+
+select * from Products
+where (category_id != 1 and price > 500000);
