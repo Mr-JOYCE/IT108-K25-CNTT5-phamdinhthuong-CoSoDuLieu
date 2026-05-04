@@ -15,44 +15,50 @@ INSERT INTO ORDERS (CustomerName, OrderDate, TotalAmount, Status) VALUES
 ('Trần Thị B', '2023-05-20', 300000, 'Canceled'),
 ('Lê Văn C', '2024-01-05', 850000, 'Completed');
 
--- Vấn đề:
--- SELECT * 
--- FROM ORDERS 
--- WHERE Status = 'Completed';
--- Nhược điểm:
--- Vẫn phải quét toàn bộ bảng (bao gồm đơn bị hủy)
--- Không tối ưu khi dữ liệu lớn
+-- ==========================================================
+-- BAI TOAN: DON RAC DON HANG CU TRANG THAI "Canceled"
+-- Gia su "don cu" la don co OrderDate < '2025-01-01'
+-- ==========================================================
 
--- Giải pháp:
--- 1. Hard Delete (Xóa vật lý)
+-- 1) DE XUAT GIAI PHAP A - HARD DELETE (xoa vat ly)
+-- SQL:
 -- DELETE FROM ORDERS
--- WHERE Status = 'Canceled';
--- 2. Soft Delete (Xóa logic)
+-- WHERE Status = 'Canceled'
+--   AND OrderDate < '2025-01-01';
+--
+-- 2) DE XUAT GIAI PHAP B - SOFT DELETE (xoa logic)
+-- SQL:
 -- UPDATE ORDERS
 -- SET IsDeleted = 1
--- WHERE Status = 'Canceled';
+-- WHERE Status = 'Canceled'
+--   AND OrderDate < '2025-01-01';
+--
+-- 3) BANG SO SANH UU/NHUOC DIEM
+-- Tieu chi              | Hard Delete                  | Soft Delete
+-- --------------------- | ---------------------------- | ----------------------------
+-- Dung luong luu tru    | Giam ngay                    | Khong giam ngay
+-- Toc do truy van       | Nhanh hon do it ban ghi      | Can them dieu kien IsDeleted
+-- Lich su/kiem toan     | Mat du lieu da xoa           | Van giu du lieu lich su
+-- Kha nang khoi phuc    | Khong khoi phuc duoc         | Co the phuc hoi (IsDeleted=0)
+-- Rui ro van hanh       | Cao neu xoa nham             | Thap hon, an toan nghiep vu
+--
+-- 4) LUA CHON CUOI CUNG: SOFT DELETE
+-- Ly do: he thong sieu thi can giu lich su don huy de doi soat/kiem toan.
 
--- So Sánh 2 phương pháp
--- 		Tiêu chí				Hard Delete					Soft Delete
--- 	Dung lượng ổ cứng			Giảm mạnh	 				Không giảm
--- 	Tốc độ truy vấn	 			Nhanh hơn (ít dữ liệu)	 	Cần filter thêm
--- 	Lịch sử kế toán	 			Mất dữ liệu	 				Giữ nguyên
--- 	Khôi phục dữ liệu	 		Không thể	 				Có thể
-
--- Chọn giải pháp: Soft Delete
-
--- Bước 1: Đánh dấu đơn bị hủy
+-- Bước 1: Đánh dấu đơn hủy cũ là đã xóa logic
 UPDATE ORDERS
 SET IsDeleted = 1
-WHERE Status = 'Canceled';
+WHERE Status = 'Canceled'
+  AND OrderDate < '2025-01-01';
 
--- Bước 2: Truy vấn cho hệ thống bán hàng (ẩn đơn hủy)
-SELECT *
+-- Bước 2: Truy vấn cho hệ thống bán hàng (ẩn đơn đã dọn rác)
+SELECT OrderID, CustomerName, OrderDate, TotalAmount, Status
 FROM ORDERS
 WHERE IsDeleted = 0;
 
--- Bước 3: Truy vấn cho kế toán (xem đơn hủy)
-SELECT *
+-- Bước 3: Truy vấn cho kế toán (xem lại đơn hủy cũ đã dọn rác)
+SELECT OrderID, CustomerName, OrderDate, TotalAmount, Status, IsDeleted
 FROM ORDERS
-WHERE Status = 'Canceled';
+WHERE Status = 'Canceled'
+  AND OrderDate < '2025-01-01';
 
